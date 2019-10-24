@@ -64,6 +64,17 @@ end_per_suite(Config) ->
   ok.
 
 -spec init_per_testcase(atom(), config()) -> config().
+init_per_testcase(macro_with_args_included, Config0) ->
+  Config = erlang_ls_test_utils:init_per_testcase( macro_with_args_included
+                                                 , Config0
+                                                 ),
+  %% Force an indexing of 'assert.hrl'
+  Path = filelib:wildcard(
+           filename:join([code:root_dir(), "lib", "stdlib-*", "include"])),
+  {ok, IoDevice, FullName} = file:path_open(Path, <<"assert.hrl">>, [read]),
+  file:close(IoDevice),
+  ok = erlang_ls_index:index_file(FullName),
+  Config;
 init_per_testcase(TestCase, Config) ->
   erlang_ls_test_utils:init_per_testcase(TestCase, Config).
 
