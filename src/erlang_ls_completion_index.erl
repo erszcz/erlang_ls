@@ -9,7 +9,7 @@
 -export([ find/1 ]).
 
 -type key()   :: module().
--type value() :: erlang_ls_uri:uri().
+-type value() :: uri().
 
 -export_type([ key/0 ]).
 

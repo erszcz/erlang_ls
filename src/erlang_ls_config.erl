@@ -23,7 +23,7 @@
 -type path()   :: file:filename().
 -type state() :: #{ deps_dirs => [path()]
                   , otp_path  => path()
-                  , root_uri  => erlang_ls_uri:uri()
+                  , root_uri  => uri()
                   }.
 
 
@@ -31,7 +31,7 @@
 %% Exported functions
 %%==============================================================================
 
--spec initialize(erlang_ls_uri:uri(), map()) -> map().
+-spec initialize(uri(), map()) -> map().
 initialize(RootUri, InitOptions) ->
   Config = consult_config(filename:join([ erlang_ls_uri:path(RootUri)
                                         , config_path(InitOptions)

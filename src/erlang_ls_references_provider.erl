@@ -51,7 +51,7 @@ find_references(Uri, POI) ->
     Refs -> [location(U, R) || #{uri := U, range := R} <- Refs]
   end.
 
--spec location(erlang_ls_uri:uri(), erlang_ls_poi:range()) -> map().
+-spec location(uri(), erlang_ls_poi:range()) -> map().
 location(Uri, Range) ->
   #{ uri   => Uri
    , range => erlang_ls_protocol:range(Range)

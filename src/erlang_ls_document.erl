@@ -21,7 +21,7 @@
 %% Type Definitions
 %%==============================================================================
 
--type document() :: #{ uri  := erlang_ls_uri:uri()
+-type document() :: #{ uri  := uri()
                      , text := binary()
                      , tree := erlang_ls_tree:tree()
                      , pois := [erlang_ls_poi:poi()]
@@ -33,7 +33,7 @@
 %%% API
 %%%=============================================================================
 
--spec create(erlang_ls_uri:uri(), binary()) -> document().
+-spec create(uri(), binary()) -> document().
 create(Uri, Text) ->
   {ok, Tree, Extra} = erlang_ls_parser:parse(Text),
   AnnotatedTree = erlang_ls_tree:annotate(Tree, Extra),
@@ -44,7 +44,7 @@ create(Uri, Text) ->
    , pois => POIs
    }.
 
--spec uri(document()) -> erlang_ls_uri:uri().
+-spec uri(document()) -> uri().
 uri(#{uri := Uri}) ->
   Uri.
 
