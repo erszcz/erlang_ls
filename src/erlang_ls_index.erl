@@ -5,7 +5,8 @@
 -callback index(erlang_ls_document:document()) -> ok.
 -callback setup() -> atom().
 
--export([ index/1
+-export([ find_and_index_file/1
+        , index/1
         , index_file/1
         , initialize/1
         , start_link/1
@@ -32,6 +33,8 @@
          ]
        ).
 
+-include("erlang_ls.hrl").
+
 %%==============================================================================
 %% External functions
 %%==============================================================================
@@ -45,7 +48,10 @@ initialize(_Config) ->
   %% TODO: This could be done asynchronously,
   %%       but we need a way to know when indexing is done,
   %%       or the tests will be flaky.
-  indexer(),
+
+  %% At initialization, we currently index only the app path.
+  %% deps and otp paths will be indexed on demand.
+  indexer(app_path()),
   ok.
 
 -spec index(erlang_ls_document:document()) -> ok.
@@ -83,25 +89,41 @@ handle_cast({index, Index, Document}, State) ->
 %% Internal functions
 %%==============================================================================
 
--spec indexer() -> ok.
-indexer() ->
-  Paths = app_path(), %% ++ deps_path() ++ otp_path(),
-  Fun   = fun(File, _) -> index_file(iolist_to_binary(File)) end,
+-spec indexer([string()]) -> ok.
+indexer(Paths) ->
+  Fun = fun(File, _) -> index_file(iolist_to_binary(File)) end,
   [ filelib:fold_files(Path, ".*\\.[e,h]rl$", true, Fun, ok)
     || Path <- Paths
   ],
   ok.
 
+-spec find_and_index_file(string()) ->
+   {ok, uri()} | {error, any()}.
+find_and_index_file(FileName) ->
+  Paths = lists:append([ app_path()
+                       , deps_path()
+                       , otp_path()
+                       ]),
+  case file:path_open(Paths, list_to_binary(FileName), [read]) of
+    {ok, IoDevice, FullName} ->
+      %% TODO: Avoid opening file twice
+      file:close(IoDevice),
+      index_file(FullName),
+      {ok, erlang_ls_uri:uri(FullName)};
+    {error, Error} ->
+      {error, Error}
+  end.
+
 -spec index_file(file:name_all()) -> ok.
-index_file(File) ->
+index_file(FullName) ->
   try
-    lager:debug("Indexing ~s", [File]),
-    {ok, Text} = file:read_file(File),
-    Uri        = erlang_ls_uri:uri(File),
+    lager:debug("Indexing ~s", [FullName]),
+    {ok, Text} = file:read_file(FullName),
+    Uri        = erlang_ls_uri:uri(FullName),
     Document   = erlang_ls_document:create(Uri, Text),
     ok         = index(Document)
   catch Type:Reason:St ->
-      lager:error("Error indexing ~s: ~p", [File, Reason]),
+      lager:error("Error indexing ~s: ~p", [FullName, Reason]),
       erlang:raise(Type, Reason, St)
   end.
 
