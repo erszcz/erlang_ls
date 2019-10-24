@@ -26,22 +26,44 @@ setup(_Config) ->
   {any(), erlang_ls_provider:state()}.
 handle_request({document_symbol, Params}, State) ->
   #{ <<"textDocument">> := #{ <<"uri">> := Uri}} = Params,
-  {ok, Document} = erlang_ls_db:find(documents, Uri),
-  POIs = erlang_ls_document:points_of_interest(Document, [function]),
-  case POIs of
+  Modules   = modules(),
+  Functions = functions(Uri),
+  Symbols = lists:append(Modules, Functions),
+  case Symbols of
     [] -> {null, State};
-    _ ->
-      {[ #{ name => list_to_binary(io_lib:format("~p/~p", [F, A]))
-          , kind => ?SYMBOLKIND_FUNCTION
-          , location => #{ uri   => Uri
-                         , range => erlang_ls_protocol:range(Range)
-                         }
-          }
-         || #{ data := {F, A}
-             , range := Range
-             } <- POIs ], State}
+    _  -> {Symbols, State}
   end.
 
 -spec teardown() -> ok.
 teardown() ->
   ok.
+
+%%==============================================================================
+%% Internal Functions
+%%==============================================================================
+-spec functions(uri()) -> [map()].
+functions(Uri) ->
+  {ok, Document} = erlang_ls_db:find(documents, Uri),
+  POIs = erlang_ls_document:points_of_interest(Document, [function]),
+  [ #{ name => function_name(F, A)
+     , kind => ?SYMBOLKIND_FUNCTION
+     , location => #{ uri   => Uri
+                    , range => erlang_ls_protocol:range(Range)
+                    }
+     } || #{data := {F, A}, range := Range} <- POIs ].
+
+-spec modules() -> [map()].
+modules() ->
+  Entries = erlang_ls_db:list(completion_index),
+  Range = #{from => {1, 1}, to => {1, 1}},
+  [ #{ name => atom_to_binary(Module, utf8)
+     , kind => ?SYMBOLKIND_MODULE
+     , location => #{ uri => Uri
+                    , range => erlang_ls_protocol:range(Range)
+                    }
+       %% TODO: Do not index header files together with modules
+     } || {Module, Uri} <- Entries, filename:extension(Uri) =:= <<".erl">>].
+
+-spec function_name(atom(), non_neg_integer()) -> binary().
+function_name(F, A) ->
+  list_to_binary(io_lib:format("~p/~p", [F, A])).
