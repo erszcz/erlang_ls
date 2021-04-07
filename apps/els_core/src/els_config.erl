@@ -264,15 +264,12 @@ add_code_paths(WCDirs, RootDir) ->
   lists:foreach(AddADir, Dirs).
 
 -if(?OTP_RELEASE >= 23).
-%% @doc OTP >= 23 doc.
 -spec safe_relative_path(Dir :: file:name_all(),
                          RootDir :: file:name_all()) ->
   Path :: file:name_all().
 safe_relative_path(Dir, RootDir) ->
   filelib:safe_relative_path(Dir, RootDir).
 -else.
-%% @clear
-%% @doc Else doc.
 -spec safe_relative_path(FileName :: file:name_all(),
                          RootDir :: file:name_all()) ->
   Path :: file:name_all().
