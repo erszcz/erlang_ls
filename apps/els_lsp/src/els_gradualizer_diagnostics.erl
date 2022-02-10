@@ -38,6 +38,7 @@ run(Uri) ->
       Includes = [{i, I} || I <- els_config:get(include_paths)],
       Opts = [return_errors] ++ Includes,
       Errors = gradualizer:type_check_files([Path], Opts),
+      ?LOG_INFO("Gradualizer diagnostics:\n~p", [Errors]),
       lists:flatmap(fun analyzer_error/1, Errors);
     false ->
       []
@@ -60,6 +61,7 @@ start_and_load() ->
                     filelib:wildcard(filename:join(Dir, "*.erl"))
                 end,
                 els_config:get(apps_paths) ++ els_config:get(deps_paths)),
+      ?LOG_INFO("Importing files into gradualizer_db: ~p", [Files]),
       ok = gradualizer_db:import_erl_files(Files,
                                            els_config:get(include_paths)),
       true;
