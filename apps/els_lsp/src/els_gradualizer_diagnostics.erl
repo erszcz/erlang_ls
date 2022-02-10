@@ -56,6 +56,7 @@ source() ->
 start_and_load() ->
   try application:ensure_all_started(gradualizer) of
     {ok, [gradualizer]} ->
+      ?LOG_INFO("This should be printed - zxcqwe", []),
       Files = lists:flatmap(
                 fun(Dir) ->
                     filelib:wildcard(filename:join(Dir, "*.erl"))
@@ -66,6 +67,7 @@ start_and_load() ->
                                            els_config:get(include_paths)),
       true;
     {ok, []} ->
+      ?LOG_INFO("Is this printed instead? qwe123", []),
       true
   catch E:R ->
           ?LOG_ERROR("Could not start gradualizer: ~p ~p", [E, R]),
