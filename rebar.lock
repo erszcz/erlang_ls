@@ -10,7 +10,7 @@
  {<<"getopt">>,{pkg,<<"getopt">>,<<"1.0.1">>},2},
  {<<"gradualizer">>,
   {git,"https://github.com/erszcz/Gradualizer.git",
-       {ref,"e44ed24e7be0830c138ac8d63dc295d8a4f00b91"}},
+       {ref,"2221049032aa9555ad7961af9c19c547ac362ceb"}},
   0},
  {<<"jsx">>,{pkg,<<"jsx">>,<<"3.0.0">>},0},
  {<<"katana_code">>,{pkg,<<"katana_code">>,<<"0.2.1">>},1},
